@@ -2264,6 +2264,38 @@ function displayPatientStatus(patientData) {
                     <span class="info-label-mobile bengali-text">মোবাইল</span>
                     <span class="info-value-mobile">${formatBangladeshiPhoneNumber(patientData.phone)}</span>
                 </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">রক্তের গ্রুপ</span>
+                    <span class="info-value-mobile">${patientData.bloodGroup || 'নাই'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">জরুরী যোগাযোগ</span>
+                    <span class="info-value-mobile">${patientData.emergencyContact ? formatBangladeshiPhoneNumber(patientData.emergencyContact) : 'নাই'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">ঠিকানা</span>
+                    <span class="info-value-mobile">${patientData.address}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">বর্তমান সমস্যা</span>
+                    <span class="info-value-mobile">${patientData.currentSymptoms || 'নাই'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">চিকিৎসা ইতিহাস</span>
+                    <span class="info-value-mobile">${patientData.medicalHistory || 'নাই'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">অ্যালার্জি</span>
+                    <span class="info-value-mobile">${patientData.allergies || 'নাই'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">পূর্ববর্তী ঔষধ</span>
+                    <span class="info-value-mobile">${patientData.previousMedications || 'নাই'}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">ডাক্তার</span>
+                    <span class="info-value-mobile">${patientData.assignedDoctor || 'Not Assigned'}</span>
+                </div>
             </div>
             
             <!-- Progress Timeline -->
