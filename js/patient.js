@@ -1537,3 +1537,818 @@ window.addEventListener('load', () => {
         }
     }, 2000);
 });
+
+// ============================================
+// PDF PREVIEW SYSTEM - MOBILE OPTIMIZED
+// ============================================
+
+function showPDFPreview(patientData) {
+    // Create or show PDF preview container
+    let pdfContainer = document.getElementById('pdfPreviewContainer');
+    if (!pdfContainer) {
+        pdfContainer = document.createElement('div');
+        pdfContainer.id = 'pdfPreviewContainer';
+        pdfContainer.className = 'pdf-preview-container';
+
+        // Insert after form
+        const form = document.getElementById('patientRegistrationForm');
+        form.parentNode.insertBefore(pdfContainer, form.nextSibling);
+    }
+
+    // Format registration date
+    let regDate;
+    if (patientData.registrationDate && patientData.registrationDate.toDate) {
+        regDate = formatBangladeshiDateTime(patientData.registrationDate.toDate());
+    } else if (patientData.registrationDateISO) {
+        regDate = formatBangladeshiDateTime(new Date(patientData.registrationDateISO));
+    } else {
+        regDate = formatBangladeshiDateTime(new Date());
+    }
+
+    // Get status color
+    function getStatusColor(status) {
+        const statusStr = String(status).toUpperCase();
+        if (statusStr.includes('WAITING') || statusStr.includes('অপেক্ষমাণ')) {
+            return '#ffc107';
+        } else if (statusStr.includes('UNDER CHECKUP') || statusStr.includes('চেকআপ চলছে')) {
+            return '#17a2b8';
+        } else if (statusStr.includes('COMPLETED') || statusStr.includes('সম্পন্ন')) {
+            return '#28a745';
+        } else if (statusStr.includes('REJECTED') || statusStr.includes('বাতিল')) {
+            return '#dc3545';
+        }
+        return '#6c757d';
+    }
+
+    const statusColor = getStatusColor(patientData.status);
+    const banglaStatus = getBanglaStatus(patientData.status);
+
+    // Create compact registration ID display for mobile
+    const compactRegIdHTML = `
+        <div class="compact-registration-id-display">
+            <div class="registration-id-card">
+                <div class="registration-icon">
+                    <i class="fas fa-id-card"></i>
+                </div>
+                <div class="registration-info">
+                    <p class="registration-label bengali-text">আপনার নিবন্ধন আইডি:</p>
+                    <h2 class="registration-id-number">${patientData.registrationId}</h2>
+                    <p class="registration-hint bengali-text">এই আইডিটি সংরক্ষণ করুন</p>
+                </div>
+            </div>
+            <div class="registration-actions">
+                <button class="action-btn copy-btn" onclick="copyRegistrationId('${patientData.registrationId}')">
+                    <i class="fas fa-copy"></i>
+                </button>
+                <button class="action-btn share-btn" onclick="shareRegistrationId('${patientData.registrationId}', '${patientData.fullName}')">
+                    <i class="fas fa-share-alt"></i>
+                </button>
+            </div>
+        </div>
+    `;
+
+    pdfContainer.innerHTML = `
+        <div class="pdf-preview-card">
+            <!-- Compact Registration ID Display (Mobile First) -->
+            ${compactRegIdHTML}
+
+            <!-- PDF Header -->
+            <div class="pdf-header">
+                <div class="pdf-logo">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <h1 class="pdf-title bengali-text">রক্তজবা ফাউন্ডেশন</h1>
+                <p class="pdf-subtitle bengali-text">১৬ ডিসেম্বর ২০২৫ - বিনামূল্যে মেডিকেল ক্যাম্প</p>
+            </div>
+
+            <!-- PDF Body (Accordion Style for Mobile) -->
+            <div class="pdf-body">
+                <!-- Personal Information Accordion -->
+                <div class="pdf-accordion-section" id="personalInfoSection">
+                    <button class="accordion-header" onclick="toggleAccordion('personalInfoSection')">
+                        <h3 class="section-title bengali-text">
+                            <i class="fas fa-user-circle"></i> ব্যক্তিগত তথ্য
+                            <span class="accordion-arrow"><i class="fas fa-chevron-down"></i></span>
+                        </h3>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="mobile-info-grid">
+                            <div class="mobile-info-item">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-user"></i> নাম
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.fullName}</div>
+                            </div>
+                            <div class="mobile-info-item">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-birthday-cake"></i> বয়স/লিঙ্গ
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.age} বছর / ${patientData.gender}</div>
+                            </div>
+                            <div class="mobile-info-item">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-phone"></i> মোবাইল
+                                </span>
+                                <div class="mobile-info-value bengali-text">${formatBangladeshiPhoneNumber(patientData.phone)}</div>
+                            </div>
+                            <div class="mobile-info-item">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-tint"></i> রক্তের গ্রুপ
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.bloodGroup || 'নাই'}</div>
+                            </div>
+                            <div class="mobile-info-item">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-phone-alt"></i> জরুরী যোগাযোগ
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.emergencyContact ? formatBangladeshiPhoneNumber(patientData.emergencyContact) : 'নাই'}</div>
+                            </div>
+                            <div class="mobile-info-item full-width">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-map-marker-alt"></i> ঠিকানা
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.address}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Medical Information Accordion -->
+                <div class="pdf-accordion-section" id="medicalInfoSection">
+                    <button class="accordion-header" onclick="toggleAccordion('medicalInfoSection')">
+                        <h3 class="section-title bengali-text">
+                            <i class="fas fa-file-medical"></i> চিকিৎসা তথ্য
+                            <span class="accordion-arrow"><i class="fas fa-chevron-down"></i></span>
+                        </h3>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="mobile-info-grid">
+                            <div class="mobile-info-item full-width">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-stethoscope"></i> বর্তমান সমস্যা
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.currentSymptoms || 'নাই'}</div>
+                            </div>
+                            <div class="mobile-info-item full-width">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-history"></i> চিকিৎসা ইতিহাস
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.medicalHistory || 'নাই'}</div>
+                            </div>
+                            <div class="mobile-info-item">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-allergies"></i> অ্যালার্জি
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.allergies || 'নাই'}</div>
+                            </div>
+                            <div class="mobile-info-item">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-pills"></i> পূর্ববর্তী ঔষধ
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.previousMedications || 'নাই'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Registration Details Accordion -->
+                <div class="pdf-accordion-section" id="registrationDetailsSection">
+                    <button class="accordion-header" onclick="toggleAccordion('registrationDetailsSection')">
+                        <h3 class="section-title bengali-text">
+                            <i class="fas fa-clipboard-check"></i> নিবন্ধন বিবরণ
+                            <span class="accordion-arrow"><i class="fas fa-chevron-down"></i></span>
+                        </h3>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="mobile-info-grid">
+                            <div class="mobile-info-item">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-id-card"></i> নিবন্ধন আইডি
+                                </span>
+                                <div class="mobile-info-value bengali-text">${patientData.registrationId}</div>
+                            </div>
+                            <div class="mobile-info-item full-width">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-calendar-alt"></i> নিবন্ধনের তারিখ
+                                </span>
+                                <div class="mobile-info-value bengali-text">${regDate}</div>
+                            </div>
+                            <div class="mobile-info-item">
+                                <span class="mobile-info-label bengali-text">
+                                    <i class="fas fa-hourglass-half"></i> স্ট্যাটাস
+                                </span>
+                                <div class="mobile-info-value">
+                                    <span class="mobile-status-badge" style="background: ${statusColor}">${banglaStatus}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PDF Footer -->
+            <div class="pdf-footer">
+                <!-- Instructions Accordion -->
+                <div class="instructions-accordion" id="instructionsSection">
+                    <button class="accordion-header" onclick="toggleAccordion('instructionsSection')">
+                        <h4 class="bengali-text">
+                            <i class="fas fa-info-circle"></i> গুরুত্বপূর্ণ নির্দেশাবলী
+                            <span class="accordion-arrow"><i class="fas fa-chevron-down"></i></span>
+                        </h4>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="mobile-instructions">
+                            <div class="instruction-item">
+                                <i class="fas fa-calendar-day"></i>
+                                <div class="instruction-content">
+                                    <strong class="bengali-text">তারিখ:</strong>
+                                    <span class="bengali-text">১৬ ডিসেম্বর ২০২৫ (মঙ্গলবার)</span>
+                                </div>
+                            </div>
+                            <div class="instruction-item">
+                                <i class="fas fa-clock"></i>
+                                <div class="instruction-content">
+                                    <strong class="bengali-text">সময়:</strong>
+                                    <span class="bengali-text">সকাল ৮:০০ টা থেকে শুরু</span>
+                                </div>
+                            </div>
+                            <div class="instruction-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <div class="instruction-content">
+                                    <strong class="bengali-text">স্থান:</strong>
+                                    <span class="bengali-text">ভাটিরসুলপুর, এনায়েতনগর, মতলব(উত্তর), চাঁদপুর</span>
+                                </div>
+                            </div>
+                            <div class="instruction-item">
+                                <i class="fas fa-id-card"></i>
+                                <div class="instruction-content">
+                                    <strong class="bengali-text">ফর্ম:</strong>
+                                    <span class="bengali-text">এই ফর্মটি প্রিন্ট করে আনুন অথবা মোবাইলে সংরক্ষণ করুন</span>
+                                </div>
+                            </div>
+                            <div class="instruction-item">
+                                <i class="fas fa-phone"></i>
+                                <div class="instruction-content">
+                                    <strong class="bengali-text">জরুরী যোগাযোগ:</strong>
+                                    <span class="bengali-text">+880 1960 506 601</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Actions -->
+                <div class="pdf-actions">
+                    <button class="pdf-btn mobile-btn" onclick="printPDF()">
+                        <i class="fas fa-print"></i>
+                        <span class="btn-text">প্রিন্ট</span>
+                    </button>
+                    <button class="pdf-btn mobile-btn" onclick="downloadPDF()">
+                        <i class="fas fa-download"></i>
+                        <span class="btn-text">ডাউনলোড</span>
+                    </button>
+                    <button class="pdf-btn mobile-btn" onclick="sharePDF()">
+                        <i class="fas fa-share-alt"></i>
+                        <span class="btn-text">শেয়ার</span>
+                    </button>
+                    <button class="pdf-btn mobile-btn secondary" onclick="newRegistration()">
+                        <i class="fas fa-user-plus"></i>
+                        <span class="btn-text">নতুন</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    pdfContainer.style.display = 'block';
+    pdfContainer.scrollIntoView({ behavior: 'smooth' });
+    
+    // Open first accordion by default
+    setTimeout(() => {
+        toggleAccordion('personalInfoSection', true);
+    }, 300);
+}
+
+// ============================================
+// NEW HELPER FUNCTIONS FOR MOBILE
+// ============================================
+
+// Toggle accordion function
+function toggleAccordion(sectionId, forceOpen = false) {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    
+    const content = section.querySelector('.accordion-content');
+    const arrow = section.querySelector('.accordion-arrow i');
+    
+    if (forceOpen || content.style.display !== 'block') {
+        content.style.display = 'block';
+        arrow.classList.remove('fa-chevron-down');
+        arrow.classList.add('fa-chevron-up');
+        section.classList.add('active');
+    } else {
+        content.style.display = 'none';
+        arrow.classList.remove('fa-chevron-up');
+        arrow.classList.add('fa-chevron-down');
+        section.classList.remove('active');
+    }
+}
+
+// Copy registration ID to clipboard
+function copyRegistrationId(regId) {
+    navigator.clipboard.writeText(regId).then(() => {
+        showAlert('নিবন্ধন আইডি কপি করা হয়েছে!', 'success');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+        showAlert('কপি করতে সমস্যা হয়েছে', 'warning');
+    });
+}
+
+// Share registration ID
+function shareRegistrationId(regId, patientName) {
+    const shareText = `রক্তজবা ফাউন্ডেশন - মেডিকেল ক্যাম্প নিবন্ধন\n\nনাম: ${patientName}\nনিবন্ধন আইডি: ${regId}\nতারিখ: ১৬ ডিসেম্বর ২০২৫\nস্থান: ভাটিরসুলপুর, এনায়েতনগর, মতলব(উত্তর), চাঁদপুর\n\nএই আইডিটি সাথে আনুন এবং ক্যাম্পে উপস্থিত হন।`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'রক্তজবা ফাউন্ডেশন - নিবন্ধন আইডি',
+            text: shareText,
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(shareText).then(() => {
+            showAlert('নিবন্ধন তথ্য কপি করা হয়েছে!', 'success');
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+            showAlert('কপি করতে সমস্যা হচ্ছে', 'warning');
+        });
+    }
+}
+
+// ============================================
+// UPDATED PRINT FUNCTION FOR A4 PDF
+// ============================================
+
+function printPDF() {
+    const printContent = document.querySelector('.pdf-preview-card');
+    if (!printContent) return;
+
+    // Create a print-friendly version
+    const printWindow = window.open('', '_blank');
+    
+    const printHTML = `
+        <!DOCTYPE html>
+        <html lang="bn">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>রক্তজবা ফাউন্ডেশন - নিবন্ধন নিশ্চিতকরণ</title>
+            <style>
+                @page {
+                    size: A4;
+                    margin: 15mm;
+                }
+                
+                body {
+                    font-family: 'Noto Sans Bengali', 'Arial', sans-serif;
+                    margin: 0;
+                    padding: 0;
+                    background: white;
+                    color: #333;
+                    font-size: 12px;
+                    line-height: 1.4;
+                }
+                
+                .print-container {
+                    max-width: 210mm;
+                    margin: 0 auto;
+                    padding: 10mm;
+                }
+                
+                .print-header {
+                    text-align: center;
+                    margin-bottom: 15px;
+                    padding-bottom: 15px;
+                    border-bottom: 3px solid #e63946;
+                }
+                
+                .print-logo {
+                    width: 60px;
+                    height: 60px;
+                    background: #e63946;
+                    border-radius: 50%;
+                    margin: 0 auto 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                    font-size: 24px;
+                }
+                
+                .print-title {
+                    color: #e63946;
+                    margin: 0;
+                    font-size: 18px;
+                    font-weight: 700;
+                }
+                
+                .print-subtitle {
+                    color: #666;
+                    margin: 5px 0 0;
+                    font-size: 12px;
+                }
+                
+                .registration-id-box {
+                    text-align: center;
+                    background: #f8f9fa;
+                    padding: 15px;
+                    border-radius: 8px;
+                    border: 2px dashed #e63946;
+                    margin: 15px 0;
+                }
+                
+                .registration-id-label {
+                    color: #666;
+                    font-size: 11px;
+                    margin-bottom: 8px;
+                }
+                
+                .registration-id-number {
+                    color: #e63946;
+                    font-size: 20px;
+                    font-weight: 700;
+                    letter-spacing: 1px;
+                    font-family: 'Courier New', monospace;
+                }
+                
+                .patient-name {
+                    color: #e63946;
+                    font-size: 16px;
+                    font-weight: 600;
+                    margin: 5px 0;
+                }
+                
+                .print-section {
+                    margin: 15px 0;
+                    page-break-inside: avoid;
+                }
+                
+                .section-title {
+                    color: #e63946;
+                    font-size: 14px;
+                    font-weight: 600;
+                    margin: 0 0 10px;
+                    padding-bottom: 5px;
+                    border-bottom: 2px solid #e63946;
+                }
+                
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 10px;
+                }
+                
+                .info-item {
+                    margin-bottom: 8px;
+                }
+                
+                .info-label {
+                    color: #666;
+                    font-size: 10px;
+                    font-weight: 500;
+                    margin-bottom: 3px;
+                }
+                
+                .info-value {
+                    font-size: 11px;
+                    font-weight: 400;
+                    color: #333;
+                    padding: 6px;
+                    background: #f8f9fa;
+                    border-radius: 4px;
+                    border-left: 3px solid #e63946;
+                }
+                
+                .full-width {
+                    grid-column: 1 / -1;
+                }
+                
+                .print-footer {
+                    margin-top: 20px;
+                    padding-top: 15px;
+                    border-top: 2px solid #ddd;
+                    font-size: 10px;
+                    color: #666;
+                }
+                
+                .footer-title {
+                    color: #28a745;
+                    font-size: 11px;
+                    font-weight: 600;
+                    margin-bottom: 8px;
+                }
+                
+                .instruction-list {
+                    margin: 0;
+                    padding-left: 15px;
+                }
+                
+                .instruction-list li {
+                    margin-bottom: 5px;
+                }
+                
+                @media print {
+                    body * {
+                        visibility: hidden;
+                    }
+                    
+                    .print-container,
+                    .print-container * {
+                        visibility: visible;
+                    }
+                    
+                    .print-container {
+                        position: absolute;
+                        left: 0;
+                        top: 0;
+                        width: 100%;
+                        margin: 0;
+                        padding: 10mm;
+                    }
+                    
+                    .no-print {
+                        display: none !important;
+                    }
+                    
+                    .page-break {
+                        page-break-before: always;
+                    }
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-container">
+                <!-- Header -->
+                <div class="print-header">
+                    <div class="print-logo">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <h1 class="print-title bengali-text">রক্তজবা ফাউন্ডেশন</h1>
+                    <p class="print-subtitle bengali-text">১৬ ডিসেম্বর ২০২৫ - বিনামূল্যে মেডিকেল ক্যাম্প</p>
+                </div>
+                
+                <!-- Registration ID -->
+                <div class="registration-id-box">
+                    <p class="registration-id-label bengali-text">আপনার নিবন্ধন আইডি:</p>
+                    <div class="registration-id-number">${document.querySelector('.registration-id-number')?.textContent || ''}</div>
+                    <p class="patient-name bengali-text">${document.querySelector('.mobile-info-value')?.textContent || ''}</p>
+                </div>
+                
+                <!-- Patient Information -->
+                <div class="print-section">
+                    <h3 class="section-title bengali-text">ব্যক্তিগত তথ্য</h3>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label bengali-text">পূর্ণ নাম</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[0]?.textContent || ''}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label bengali-text">বয়স/লিঙ্গ</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[1]?.textContent || ''}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label bengali-text">মোবাইল নম্বর</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[2]?.textContent || ''}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label bengali-text">রক্তের গ্রুপ</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[3]?.textContent || ''}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label bengali-text">জরুরী যোগাযোগ</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[4]?.textContent || ''}</div>
+                        </div>
+                        <div class="info-item full-width">
+                            <div class="info-label bengali-text">ঠিকানা</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[5]?.textContent || ''}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Medical Information -->
+                <div class="print-section">
+                    <h3 class="section-title bengali-text">চিকিৎসা তথ্য</h3>
+                    <div class="info-grid">
+                        <div class="info-item full-width">
+                            <div class="info-label bengali-text">বর্তমান সমস্যা</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[6]?.textContent || ''}</div>
+                        </div>
+                        <div class="info-item full-width">
+                            <div class="info-label bengali-text">চিকিৎসা ইতিহাস</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[7]?.textContent || ''}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label bengali-text">অ্যালার্জি</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[8]?.textContent || ''}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label bengali-text">পূর্ববর্তী ঔষধ</div>
+                            <div class="info-value bengali-text">${document.querySelectorAll('.mobile-info-value')[9]?.textContent || ''}</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Footer Instructions -->
+                <div class="print-footer">
+                    <h4 class="footer-title bengali-text">গুরুত্বপূর্ণ নির্দেশাবলী:</h4>
+                    <ul class="instruction-list bengali-text">
+                        <li>তারিখ: ১৬ ডিসেম্বর ২০২৫ (মঙ্গলবার)</li>
+                        <li>সময়: সকাল ৮:০০ টা থেকে শুরু</li>
+                        <li>স্থান: ভাটিরসুলপুর, এনায়েতনগর, মতলব(উত্তর), চাঁদপুর</li>
+                        <li>এই ফর্মটি প্রিন্ট করে আনুন অথবা মোবাইলে সংরক্ষণ করুন</li>
+                        <li>জরুরী যোগাযোগ: +880 1960 506 601</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.write(printHTML);
+    printWindow.document.close();
+    
+    // Wait for content to load before printing
+    printWindow.onload = function() {
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+    };
+}
+
+// ============================================
+// UPDATED PATIENT STATUS DISPLAY FOR MOBILE
+// ============================================
+
+function displayPatientStatus(patientData) {
+    const statusResult = document.getElementById('statusResult');
+    if (!statusResult) return;
+
+    // Calculate patient status
+    let calculatedStatus;
+    if (patientData.checkupCompleted) {
+        calculatedStatus = 'Completed';
+    } else if (patientData.checkupStarted) {
+        calculatedStatus = 'Under Checkup';
+    } else {
+        calculatedStatus = 'Waiting';
+    }
+
+    const status = calculatedStatus;
+    const banglaStatus = getBanglaStatus(status);
+
+    let statusIcon, statusColor, statusMessage;
+
+    if (status === 'Waiting') {
+        statusIcon = 'fa-clock';
+        statusColor = '#ffc107';
+        statusMessage = 'আপনি অপেক্ষার তালিকায় আছেন। অনুগ্রহ করে আপনার নির্ধারিত সময়ে ক্যাম্প স্থানে উপস্থিত হন।';
+    } else if (status === 'Under Checkup') {
+        statusIcon = 'fa-user-md';
+        statusColor = '#17a2b8';
+        statusMessage = 'আপনার চেকআপ বর্তমানে চলছে। ধৈর্য্য ধরুন, শীঘ্রই সম্পন্ন হবে।';
+    } else if (status === 'Completed') {
+        statusIcon = 'fa-check-circle';
+        statusColor = '#28a745';
+        statusMessage = 'আপনার চেকআপ সফলভাবে সম্পন্ন হয়েছে। ডাক্তারের পরামর্শ অনুসরণ করুন।';
+    } else if (status === 'Rejected') {
+        statusIcon = 'fa-times-circle';
+        statusColor = '#dc3545';
+        statusMessage = 'আপনার নিবন্ধনটি বাতিল করা হয়েছে। বিস্তারিত জানতে অফিসে যোগাযোগ করুন।';
+    } else {
+        statusIcon = 'fa-question-circle';
+        statusColor = '#6c757d';
+        statusMessage = 'স্ট্যাটাস পাওয়া যায়নি।';
+    }
+
+    // Mobile-optimized status display
+    statusResult.innerHTML = `
+        <div class="mobile-status-container animate-fade-in">
+            <!-- Status Header -->
+            <div class="status-header" style="background: ${statusColor}">
+                <div class="status-icon">
+                    <i class="fas ${statusIcon}"></i>
+                </div>
+                <div class="status-title">
+                    <h3 class="bengali-text">স্ট্যাটাস চেক</h3>
+                    <span class="status-badge-mobile">${banglaStatus}</span>
+                </div>
+            </div>
+            
+            <!-- Patient Info Card -->
+            <div class="patient-info-card">
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">নিবন্ধন আইডি</span>
+                    <span class="info-value-mobile">${patientData.registrationId}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">নাম</span>
+                    <span class="info-value-mobile bengali-text">${patientData.fullName}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">বয়স/লিঙ্গ</span>
+                    <span class="info-value-mobile bengali-text">${patientData.age} বছর / ${patientData.gender}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label-mobile bengali-text">মোবাইল</span>
+                    <span class="info-value-mobile">${formatBangladeshiPhoneNumber(patientData.phone)}</span>
+                </div>
+            </div>
+            
+            <!-- Progress Timeline -->
+            <div class="progress-timeline">
+                <div class="timeline-step ${status === 'Waiting' ? 'active' : ''}">
+                    <div class="step-icon">
+                        <i class="fas fa-user-plus"></i>
+                    </div>
+                    <span class="step-label bengali-text">নিবন্ধিত</span>
+                </div>
+                <div class="timeline-line ${status !== 'Waiting' ? 'active' : ''}"></div>
+                <div class="timeline-step ${status === 'Under Checkup' ? 'active' : ''}">
+                    <div class="step-icon">
+                        <i class="fas fa-stethoscope"></i>
+                    </div>
+                    <span class="step-label bengali-text">চেকআপ</span>
+                </div>
+                <div class="timeline-line ${status === 'Completed' ? 'active' : ''}"></div>
+                <div class="timeline-step ${status === 'Completed' ? 'active' : ''}">
+                    <div class="step-icon">
+                        <i class="fas fa-check"></i>
+                    </div>
+                    <span class="step-label bengali-text">সম্পূর্ণ</span>
+                </div>
+            </div>
+            
+            <!-- Status Details -->
+            <div class="status-details">
+                <div class="detail-card" style="border-left: 4px solid ${statusColor}">
+                    <p class="detail-message bengali-text">${statusMessage}</p>
+                    <p class="detail-time bengali-text">
+                        <i class="fas fa-clock"></i>
+                        সর্বশেষ আপডেট: ${new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                <button class="quick-action-btn" onclick="sharePatientStatus('${patientData.registrationId}', '${patientData.fullName}', '${banglaStatus}')">
+                    <i class="fas fa-share-alt"></i>
+                    <span class="bengali-text">শেয়ার</span>
+                </button>
+                <button class="quick-action-btn" onclick="copyStatusInfo('${patientData.registrationId}', '${patientData.fullName}', '${banglaStatus}')">
+                    <i class="fas fa-copy"></i>
+                    <span class="bengali-text">কপি</span>
+                </button>
+                <button class="quick-action-btn" onclick="checkAnotherStatus()">
+                    <i class="fas fa-search"></i>
+                    <span class="bengali-text">আরেকটি</span>
+                </button>
+            </div>
+        </div>
+    `;
+
+    statusResult.style.display = 'block';
+    statusResult.scrollIntoView({ behavior: 'smooth' });
+}
+
+// New helper functions for status check
+function sharePatientStatus(regId, name, status) {
+    const shareText = `রক্তজবা ফাউন্ডেশন - মেডিকেল ক্যাম্প স্ট্যাটাস\n\nনাম: ${name}\nনিবন্ধন আইডি: ${regId}\nস্ট্যাটাস: ${status}\nতারিখ: ১৬ ডিসেম্বর ২০২৫`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: 'রক্তজবা স্ট্যাটাস',
+            text: shareText,
+            url: window.location.href
+        });
+    } else {
+        navigator.clipboard.writeText(shareText).then(() => {
+            showAlert('স্ট্যাটাস তথ্য কপি করা হয়েছে!', 'success');
+        });
+    }
+}
+
+function copyStatusInfo(regId, name, status) {
+    const text = `নাম: ${name}\nনিবন্ধন আইডি: ${regId}\nস্ট্যাটাস: ${status}`;
+    navigator.clipboard.writeText(text).then(() => {
+        showAlert('স্ট্যাটাস তথ্য কপি করা হয়েছে!', 'success');
+    });
+}
+
+function checkAnotherStatus() {
+    document.getElementById('statusResult').style.display = 'none';
+    document.getElementById('checkRegistrationId').value = '';
+    document.getElementById('checkRegistrationId').focus();
+}
