@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Registration | Roktojoba Foundation</title>
+
+    <!-- Favicon Links -->
+    <link rel="icon" href="assets/favicon.webp" type="image/webp">
+    <link rel="icon" href="assets/favicon.webp" sizes="16x16" type="image/webp">
+    <link rel="icon" href="assets/favicon.webp" sizes="32x32" type="image/webp">
+    <link rel="apple-touch-icon" href="assets/favicon.webp">
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <link rel="stylesheet" href="css/patient-registration.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@300;400;500;600;700&family=Poppins:wght@300;400;500&display=swap"
+        rel="stylesheet">
+
+    <style>
+        /* Custom styles for this page */
+        :root {
+            --primary-color: #e63946;
+            --primary-dark: #c1121f;
+            --secondary-color: #6c757d;
+            --light-bg: #f8f9fa;
+            --dark-bg: #333;
+            --text-dark: #333;
+            --text-light: #666;
+            --text-white: #fff;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --info-color: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans Bengali', 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Header Styles */
+        .header {
+            background: white;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            text-decoration: none;
+        }
+
+        .logo-img {
+            height: 60px;
+            width: auto;
+        }
+
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-family: 'Noto Sans Bengali', sans-serif;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 30px 0 60px;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+
+        .form-title {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+            font-weight: 700;
+        }
+
+        .form-subtitle {
+            text-align: center;
+            color: var(--text-light);
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .section-subtitle {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin: 25px 0 15px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+            font-size: 1rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            font-family: inherit;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(230, 57, 70, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #999;
+            font-size: 0.9rem;
+        }
+
+        .form-text {
+            display: block;
+            margin-top: 5px;
+            color: var(--text-light);
+            font-size: 0.85rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Button Styles */
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(230, 57, 70, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #545b62 100%);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 117, 125, 0.3);
+        }
+
+        .btn-block {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Status Check Section */
+        .status-check-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 25px;
+            border-radius: 15px;
+            margin-top: 40px;
+            border: 1px solid #dee2e6;
+        }
+
+        .status-check-section h3 {
+            color: var(--primary-color);
+            font-size: 1.6rem;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .status-check-section p {
+            color: var(--text-light);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .status-check-form {
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        select.form-control {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 15px center;
+            background-size: 12px;
+            padding-right: 40px;
+        }
+
+        /* Required field indicator */
+        .required::after {
+            content: ' *';
+            color: var(--primary-color);
+        }
+
+        /* Loading animation */
+        .fa-spinner {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Alert container */
+        #alertContainer {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 1000;
+            max-width: 400px;
+        }
+
+        /* Mobile Menu Toggle */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: var(--text-dark);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* Navigation Menu */
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+            align-items: center;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: var(--text-dark);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 0;
+            transition: color 0.3s ease;
+        }
+
+        .nav-menu a:hover,
+        .nav-menu a.active {
+            color: var(--primary-color);
+        }
+
+        /* Footer Styles */
+        .footer {
+            background: var(--dark-bg);
+            color: var(--text-white);
+            padding: 50px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-section {
+            padding: 10px;
+        }
+
+        .footer-title {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .footer-text {
+            color: #bbb;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .social-icon {
+            color: white;
+            background: #444;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .social-icon:hover {
+            background: var(--primary-color);
+            transform: translateY(-3px);
+        }
+
+        .partner-logos {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .logo-item {
+            background: #fff;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s ease;
+            height: 80px;
+        }
+
+        .logo-item:hover {
+            transform: scale(1.05);
+        }
+
+        .logo-item img {
+            max-width: 100%;
+            max-height: 60px;
+            object-fit: contain;
+        }
+
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .contact-item i {
+            color: var(--primary-color);
+            margin-top: 3px;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #444;
+        }
+
+        .copyright {
+            color: #bbb;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .developer-credit {
+            color: #bbb;
+            font-size: 0.85rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 30px;
+            }
+
+            .form-title {
+                font-size: 1.8rem;
+            }
+
+            .form-container {
+                padding: 25px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header-content {
+                padding: 10px 0;
+            }
+
+            .logo-img {
+                height: 50px;
+            }
+
+            .logo-text {
+                font-size: 1.1rem;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .nav-menu {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                gap: 15px;
+            }
+
+            .nav-menu.show {
+                display: flex;
+            }
+
+            .nav-menu a {
+                width: 100%;
+                padding: 10px;
+                border-bottom: 1px solid #eee;
+            }
+
+            .nav-menu a:last-child {
+                border-bottom: none;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .form-container {
+                padding: 20px;
+                margin-bottom: 30px;
+            }
+
+            .status-check-section {
+                padding: 20px;
+                margin-top: 30px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .partner-logos {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            #alertContainer {
+                left: 20px;
+                right: 20px;
+                max-width: none;
+                top: 80px;
+            }
+
+            .main-content {
+                padding: 20px 0 40px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .form-title {
+                font-size: 1.5rem;
+            }
+
+            .form-subtitle {
+                font-size: 0.95rem;
+            }
+
+            .section-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .btn {
+                padding: 10px 20px;
+                font-size: 1rem;
+            }
+
+            .partner-logos {
+                grid-template-columns: 1fr;
+            }
+
+            .logo-item {
+                height: 70px;
+            }
+
+            .social-icons {
+                justify-content: center;
+            }
+        }
+
+        /* Print Styles */
+        @media print {
+            .header,
+            .footer,
+            .status-check-section,
+            .btn {
+                display: none !important;
+            }
+
+            .form-container {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+
+            body {
+                background: white;
+            }
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus styles for accessibility */
+        a:focus,
+        button:focus,
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: 3px solid var(--primary-color);
+            outline-offset: 2px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="patient-registration.html" class="logo-container">
+                    <img src="assets/logo.webp" alt="Roktojoba Foundation Logo" class="logo-img">
+                    <span class="logo-text bengali-text">রক্তজবা ফাউন্ডেশন ফ্রী মেডিকেল ক্যাম্প</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Alert Container -->
+            <div id="alertContainer"></div>
+
+            <div class="form-container animate-fade-in">
+                <h1 class="form-title bengali-text">রোগী নিবন্ধন</h1>
+                <p class="form-subtitle bengali-text">১৬ ডিসেম্বর ২০২৫ রোজ মঙ্গলবার বিনামূল্যে ডাক্তার দেখানোর জন্য নিবন্ধন করুন</p>
+
+                <form id="patientRegistrationForm">
+                    <!-- Personal Information Section -->
+                    <h3 class="section-subtitle bengali-text">ব্যক্তিগত তথ্য</h3>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="fullName" class="form-label bengali-text required">পূর্ণ নাম</label>
+                            <input type="text" id="fullName" class="form-control" placeholder="আপনার পূর্ণ নাম লিখুন" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="age" class="form-label bengali-text required">বয়স</label>
+                            <input type="number" id="age" class="form-control" min="1" max="120" placeholder="বয়স লিখুন" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="gender" class="form-label bengali-text required">লিঙ্গ</label>
+                            <select id="gender" class="form-control" required>
+                                <option value="">লিঙ্গ নির্বাচন করুন</option>
+                                <option value="Male">পুরুষ</option>
+                                <option value="Female">মহিলা</option>
+                                <option value="Other">অন্যান্য</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bloodGroup" class="form-label bengali-text">রক্তের গ্রুপ</label>
+                            <select id="bloodGroup" class="form-control">
+                                <option value="">রক্তের গ্রুপ নির্বাচন করুন</option>
+                                <option value="A+">এ+ (A+)</option>
+                                <option value="A-">এ- (A-)</option>
+                                <option value="B+">বি+ (B+)</option>
+                                <option value="B-">বি- (B-)</option>
+                                <option value="O+">ও+ (O+)</option>
+                                <option value="O-">ও- (O-)</option>
+                                <option value="AB+">এবি+ (AB+)</option>
+                                <option value="AB-">এবি- (AB-)</option>
+                                <option value="Unknown">অজানা</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="phone" class="form-label bengali-text required">মোবাইল নম্বর</label>
+                            <input type="tel" id="phone" class="form-control" placeholder="01XXXXXXXXX বা +8801XXXXXXXXX" required>
+                            <small class="form-text bengali-text">বাংলাদেশি মোবাইল নম্বর দিন</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="emergencyContact" class="form-label bengali-text">জরুরী যোগাযোগের নম্বর</label>
+                            <input type="tel" id="emergencyContact" class="form-control" placeholder="জরুরী যোগাযোগের নম্বর">
+                            <small class="form-text bengali-text">বাংলাদেশি মোবাইল নম্বর দিন</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address" class="form-label bengali-text required">সম্পূর্ণ ঠিকানা</label>
+                        <textarea id="address" class="form-control" rows="3" placeholder="বাড়ি নম্বর, রাস্তা, এলাকা, শহর, জেলা" required></textarea>
+                    </div>
+
+                    <!-- Medical Information Section -->
+                    <h3 class="section-subtitle bengali-text">চিকিৎসা তথ্য</h3>
+
+                    <div class="form-group">
+                        <label for="medicalHistory" class="form-label bengali-text">চিকিৎসা ইতিহাস</label>
+                        <textarea id="medicalHistory" class="form-control" rows="3" placeholder="যেকোনো পূর্বের চিকিৎসা সমস্যা, অস্ত্রোপচার, ক্রনিক রোগ, ইত্যাদি"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="currentSymptoms" class="form-label bengali-text required">বর্তমান লক্ষণ / সমস্যা</label>
+                        <textarea id="currentSymptoms" class="form-control" rows="3" placeholder="আপনার বর্তমান স্বাস্থ্য সমস্যার বিস্তারিত বর্ণনা দিন" required></textarea>
+                        <small class="form-text bengali-text">কী সমস্যায় আপনি চিকিৎসা নিতে চান?</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="allergies" class="form-label bengali-text">অ্যালার্জি (যদি থাকে)</label>
+                            <input type="text" id="allergies" class="form-control" placeholder="ড্রাগ অ্যালার্জি, খাদ্য অ্যালার্জি, ইত্যাদি">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="previousMedications" class="form-label bengali-text">পূর্ববর্তী ঔষধ (যদি থাকে)</label>
+                            <input type="text" id="previousMedications" class="form-control" placeholder="বর্তমানে বা সম্প্রতি গ্রহণকৃত ঔষধের নাম">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 30px;">
+                        <button type="submit" class="btn btn-primary btn-block bengali-text">
+                            <i class="fas fa-user-plus"></i> রোগী নিবন্ধন করুন
+                        </button>
+                    </div>
+                </form>
+
+                <!-- Status Check Section -->
+                <div class="status-check-section">
+                    <h3 class="bengali-text">আপনার স্ট্যাটাস চেক করুন</h3>
+                    <p class="bengali-text">ইতিমধ্যে নিবন্ধিত? আপনার নিবন্ধন আইডি ব্যবহার করে বর্তমান স্ট্যাটাস চেক করুন।</p>
+
+                    <form id="statusCheckForm" class="status-check-form">
+                        <div class="form-group">
+                            <label for="checkRegistrationId" class="form-label bengali-text">নিবন্ধন আইডি</label>
+                            <input type="text" id="checkRegistrationId" class="form-control" placeholder="আপনার নিবন্ধন আইডি দিন" required>
+                        </div>
+
+                        <div class="form-group" style="text-align: center;">
+                            <button type="submit" class="btn btn-secondary bengali-text">
+                                <i class="fas fa-search"></i> স্ট্যাটাস চেক করুন
+                            </button>
+                        </div>
+                    </form>
+
+                    <div id="statusResult" style="display: none; margin-top: 25px;"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3 class="footer-title bengali-text">রক্তজবা ফাউন্ডেশন</h3>
+                    <p class="footer-text bengali-text">
+                        একটি অরাজনৈতিক মানবিক সামাজিক ও সেচ্ছাসেবী সংগঠন। 
+                        আমরা স্বাস্থ্যসেবা, শিক্ষা ও সমাজসেবার মাধ্যমে মানুষের জীবনযাত্রার মান উন্নয়নে কাজ করছি।
+                    </p>
+                    <div class="social-icons">
+                        <a href="https://www.facebook.com/groups/795181972688739/?ref=share&mibextid=NSMWBT" class="social-icon" aria-label="ফেসবুক">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="https://m.me/j/AbYuekhvpv67GWlz/" class="social-icon" aria-label="মেসেঞ্জার">
+                            <i class="fab fa-facebook-messenger"></i>
+                        </a>
+                        <a href="https://www.linkedin.com/in/roktojoba-foundation-550a12321/" class="social-icon" aria-label="লিংকডইন">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="https://wa.me/8801960506601" class="social-icon" aria-label="হোয়াটসঅ্যাপ">
+                            <i class="fab fa-whatsapp"></i>
+                        </a>
+                        <a href="https://roktojobafoundation.github.io/qr/" class="social-icon" aria-label="কিউআর কোড">
+                            <i class="fas fa-qrcode"></i>
+                        </a>
+                        <a href="tel:01960506601" class="social-icon" aria-label="ফোন করুন">
+                            <i class="fas fa-phone"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h3 class="footer-title bengali-text">আমাদের সহযোগী</h3>
+                    <div class="partner-logos">
+                        <div class="logo-item">
+                            <img src="assets/Aurora Logo.webp" alt="অরোরা লোগো" loading="lazy">
+                        </div>
+                        <div class="logo-item">
+                            <img src="assets/Feature Technology Innovation Logo.png" alt="ফিচার টেকনোলজি লোগো" loading="lazy">
+                        </div>
+                        <div class="logo-item">
+                            <img src="assets/partner3.png" alt="সহযোগী ৩ লোগো" loading="lazy">
+                        </div>
+                        <div class="logo-item">
+                            <img src="images/partner4.png" alt="সহযোগী ৪ লোগো" loading="lazy">
+                        </div>
+                        <div class="logo-item">
+                            <img src="images/partner5.png" alt="সহযোগী ৫ লোগো" loading="lazy">
+                        </div>
+                        <div class="logo-item">
+                            <img src="images/partner6.png" alt="সহযোগী ৬ লোগো" loading="lazy">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="footer-section">
+                    <h3 class="footer-title bengali-text">যোগাযোগের তথ্য</h3>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span class="footer-text bengali-text">ভাটিরসুলপুর, এনায়েতনগর, মতলব(উত্তর), চাঁদপুর।</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span class="footer-text bengali-text">+880 1960 506 601</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span class="footer-text">roktojobafoundation@gmail.com</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-clock"></i>
+                            <span class="footer-text bengali-text">সকাল :৮:০০ - রাত ৮:০০</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <p class="copyright bengali-text">© 2025 Roktojoba Foundation. All rights reserved.</p>
+                <p class="developer-credit bengali-text">
+                    Roktojoba Foundation - Free Medical Camp | 16 December 2025
+                    | Designed & Developed by Tasrik Hossain
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Files -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/patient.js"></script>
+
+    <script>
+        // Mobile menu functionality
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const navMenu = document.getElementById('navMenu');
+
+        if (mobileMenuBtn && navMenu) {
+            mobileMenuBtn.addEventListener('click', function() {
+                navMenu.classList.toggle('show');
+                const icon = this.querySelector('i');
+                if (navMenu.classList.contains('show')) {
+                    icon.classList.remove('fa-bars');
+                    icon.classList.add('fa-times');
+                    this.setAttribute('aria-label', 'মেনু বন্ধ করুন');
+                } else {
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                    this.setAttribute('aria-label', 'মেনু খুলুন');
+                }
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!mobileMenuBtn.contains(event.target) && !navMenu.contains(event.target)) {
+                    navMenu.classList.remove('show');
+                    const icon = mobileMenuBtn.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                    mobileMenuBtn.setAttribute('aria-label', 'মেনু খুলুন');
+                }
+            });
+
+            // Close menu when clicking on a link
+            navMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('show');
+                    const icon = mobileMenuBtn.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                    mobileMenuBtn.setAttribute('aria-label', 'মেনু খুলুন');
+                });
+            });
+        }
+
+        // Handle window resize
+        function handleResize() {
+            if (window.innerWidth > 768) {
+                navMenu.classList.remove('show');
+                if (mobileMenuBtn) {
+                    const icon = mobileMenuBtn.querySelector('i');
+                    icon.classList.remove('fa-times');
+                    icon.classList.add('fa-bars');
+                    mobileMenuBtn.setAttribute('aria-label', 'মেনু খুলুন');
+                }
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        window.addEventListener('load', handleResize);
+
+        // Form validation styles
+        function initFormValidation() {
+            const form = document.getElementById('patientRegistrationForm');
+            if (!form) return;
+
+            const inputs = form.querySelectorAll('input, select, textarea');
+            
+            inputs.forEach(input => {
+                input.addEventListener('blur', function() {
+                    if (this.value.trim() !== '') {
+                        this.classList.add('filled');
+                    } else {
+                        this.classList.remove('filled');
+                    }
+                    
+                    if (this.checkValidity()) {
+                        this.classList.add('valid');
+                        this.classList.remove('invalid');
+                    } else {
+                        this.classList.add('invalid');
+                        this.classList.remove('valid');
+                    }
+                });
+
+                input.addEventListener('input', function() {
+                    if (this.checkValidity()) {
+                        this.classList.add('valid');
+                        this.classList.remove('invalid');
+                    } else {
+                        this.classList.remove('valid');
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            initFormValidation();
+        });
+
+        // Phone number formatting
+        function formatPhoneNumber(input) {
+            let value = input.value.replace(/\D/g, '');
+            
+            if (value.startsWith('880')) {
+                value = '+880' + value.substring(3);
+            } else if (value.startsWith('01') && value.length === 11) {
+                value = '+880' + value.substring(1);
+            }
+            
+            if (value.startsWith('+880') && value.length > 4) {
+                const formatted = `+880 ${value.substring(4, 6)} ${value.substring(6, 9)}-${value.substring(9)}`;
+                input.value = formatted.trim();
+            }
+        }
+
+        const phoneInput = document.getElementById('phone');
+        const emergencyContactInput = document.getElementById('emergencyContact');
+        
+        if (phoneInput) {
+            phoneInput.addEventListener('blur', function() {
+                formatPhoneNumber(this);
+            });
+        }
+        
+        if (emergencyContactInput) {
+            emergencyContactInput.addEventListener('blur', function() {
+                if (this.value.trim() !== '') {
+                    formatPhoneNumber(this);
+                }
+            });
+        }
+    </script>
+</body>
+
+</html>
